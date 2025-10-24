@@ -1,0 +1,8 @@
+Neos:
+  ContentRepositoryRegistry:
+    presets:
+      default:
+        contentGraphProjection:
+            catchUpHooks:
+              'Jonnitto.PrettyEmbedHelper:AssetDownloadHook':
+                factoryObjectName: Jonnitto\PrettyEmbedHelper\CatchUpHook\AssetDownloadCatchUpHookFactory
