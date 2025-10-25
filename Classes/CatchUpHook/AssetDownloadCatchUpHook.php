@@ -52,22 +52,29 @@ class AssetDownloadCatchUpHook implements CatchUpHookInterface
      */
     public function onAfterEvent(EventInterface $eventInstance, EventEnvelope $eventEnvelope): void
     {
-        if ($eventInstance instanceof NodeAggregateWithNodeWasCreated) {
-            $this->logger->info('NodeAggregateWithNodeWasCreated', ['event' => $eventInstance::class]);
-            // $this->metadataService->onNodeAdded();
-        }
-
-        if ($eventInstance instanceof NodePropertiesWereSet) {
+        if (
+            $eventInstance instanceof NodeAggregateWithNodeWasCreated || $eventInstance instanceof NodePropertiesWereSet
+        ) {
+            $this->logger->info(
+                'Called ',
+                LogEnvironment::fromMethodName(__METHOD__));
             $contentGraph = $this->contentGraphReadModel->getContentGraph($eventInstance->getWorkspaceName());
             $node = $contentGraph->getSubgraph(
                 $eventInstance->originDimensionSpacePoint->toDimensionSpacePoint(),  // right dimension?
                 VisibilityConstraints::createEmpty()
             )->findNodeById($eventInstance->nodeAggregateId);
-            $this->logger->info(
-                'NodePropertiesWereSet: ' . $node->nodeTypeName . ' ' . $node->aggregateId,
-                LogEnvironment::fromMethodName(__METHOD__));
-            // $this->metadataService->updateDataFromService($node);
+
+            if ($eventInstance instanceof NodeAggregateWithNodeWasCreated) {
+                $this->logger->info('NodeAggregateWithNodeWasCreated', ['event' => $eventInstance::class]);
+                $this->metadataService->onNodeAdded($node);
+            }
+
+            if ($eventInstance instanceof NodePropertiesWereSet) {
+                // $this->metadataService->updateDataFromService($node);
+            }
+
         }
+
     }
 
     /**
