@@ -65,7 +65,16 @@ class ImageService
      */
     public function import(Node $node, string $url, $videoId, string $type, ?string $filenameSuffix = null): ?object
     {
-        if (!$node->nodeTypeName->equals(NodeTypeName::fromString('Jonnitto.PrettyEmbedHelper:Mixin.Metadata'))) {
+
+        $superTypes = $this->contentRepositoryRegistry
+            ->get($node->contentRepositoryId)
+            ->getNodeTypeManager()
+            ->getNodeType($node->nodeTypeName->value)
+            ->getDeclaredSuperTypes();
+
+        $superTypeStrings = array_keys($superTypes);
+
+        if (!in_array('Jonnitto.PrettyEmbedHelper:Mixin.Metadata', $superTypeStrings)) {
             return null;
         }
 
