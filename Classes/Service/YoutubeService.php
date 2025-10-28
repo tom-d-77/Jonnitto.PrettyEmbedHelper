@@ -9,7 +9,6 @@ use Jonnitto\PrettyEmbedPresentation\Utility\Utility as PresentationUtility;
 use Neos\ContentRepository\Core\Feature\NodeModification\Command\SetNodeProperties;
 use Neos\ContentRepository\Core\Feature\NodeModification\Dto\PropertyValuesToWrite;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
-use Neos\ContentRepository\Core\Projection\ContentGraph\NodePath;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Http\Client\InfiniteRedirectionException;
@@ -17,6 +16,8 @@ use Neos\Flow\Persistence\Exception\IllegalObjectTypeException;
 use Neos\Flow\Persistence\Exception\InvalidQueryException;
 use Neos\Flow\ResourceManagement\Exception;
 use JsonException;
+use Neos\Flow\Security\Context as SecurityContext;
+use Psr\Log\LoggerInterface;
 use function trim;
 
 #[Flow\Scope('singleton')]
@@ -40,6 +41,9 @@ class YoutubeService
     #[Flow\InjectConfiguration('YouTube.apiKey', 'Jonnitto.PrettyEmbed')]
     protected $apiKey;
 
+    #[Flow\Inject]
+    protected LoggerInterface $logger;
+
     /**
      * Get and save data from oembed service
      *
@@ -54,12 +58,17 @@ class YoutubeService
     {
         $this->imageService->remove($node);
 
+        $contentRepository = $this->contentRepositoryRegistry->get($node->contentRepositoryId);
+        $subGraph = $contentRepository->getContentSubgraph($node->workspaceName, $node->dimensionSpacePoint);
+        $absoluteNodePath = $subGraph->retrieveNodePath($node->aggregateId);
+
         $returnArray = [
             'nodeTypeName' => $node->nodeTypeName->value,
             'node' => 'Youtube',
-            'path' => NodePath::fromNodeNames($node->name),
-            'data' => false,
+            'path' => $absoluteNodePath->path->serializeToString(),
+            'data' => false
         ];
+
 
         if ($remove === true) {
             $this->metadataService->removeMetaData($node);

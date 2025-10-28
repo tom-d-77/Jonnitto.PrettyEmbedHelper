@@ -65,7 +65,8 @@ class AssetDownloadCatchUpHook implements CatchUpHookInterface
             )->findNodeById($eventInstance->nodeAggregateId);
 
             if ($eventInstance instanceof NodeAggregateWithNodeWasCreated) {
-                $this->logger->info('NodeAggregateWithNodeWasCreated', ['event' => $eventInstance::class]);
+                $this->logger->info('NodeAggregateWithNodeWasCreated eventInstance: ' . $eventInstance::class );
+                $this->logger->info('NodeAggregateWithNodeWasCreated node->nodeTypeName: ' . $node->nodeTypeName );
                 $this->metadataService->onNodeAdded($node);
             }
 

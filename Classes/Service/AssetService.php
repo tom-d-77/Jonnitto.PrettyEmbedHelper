@@ -4,7 +4,6 @@ namespace Jonnitto\PrettyEmbedHelper\Service;
 
 use Jonnitto\PrettyEmbedHelper\Utility\Utility;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
-use Neos\ContentRepository\Core\Projection\ContentGraph\NodePath;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\ResourceManagement\ResourceManager;
@@ -62,27 +61,58 @@ class AssetService
 
         if ($remove === true || !class_exists('JamesHeinrich\GetID3\GetID3')) {
             Utility::removeMetadata($this->contentRepositoryRegistry, $node, 'duration');
-        } else {
-            $this->setCacheDirectory();
-            $assets = $node->getProperty('assets');
+            return [];
+        }
 
-            if (isset($assets) && !empty($assets)) {
-                $getID3 = new \JamesHeinrich\GetID3\GetID3();
-                $file = $assets[0]->getResource()->createTemporaryLocalCopy();
-                if (file_exists($file)) {
+        $this->setCacheDirectory();
+        $assets = $node->getProperty('assets');
+        $duration = null;
+
+        if (is_iterable($assets)) {
+            foreach ($assets as $asset) {
+                try {
+                    if (!method_exists($asset, 'getResource')) {
+                        continue;
+                    }
+
+                    $resource = $asset->getResource();
+                    if ($resource === null) {
+                        continue;
+                    }
+
+                    $file = $resource->createTemporaryLocalCopy();
+                    if ($file === false || !file_exists($file)) {
+                        continue;
+                    }
+
+                    $getID3 = new \JamesHeinrich\GetID3\GetID3();
                     $fileInfo = $getID3->analyze($file);
-                    $duration = (int) round($fileInfo['playtime_seconds']);
+
+                    if (isset($fileInfo['playtime_seconds'])) {
+                        $duration = (int) round($fileInfo['playtime_seconds']);
+                        break; // Use the first valid asset with duration
+                    }
+                } catch (\Exception $e) {
+                    // Log error or handle it as needed
+                    continue;
                 }
             }
+        }
+
+        if ($duration !== null) {
             Utility::setMetadata($this->contentRepositoryRegistry, $node, 'duration', $duration);
         }
+
+        $contentRepository = $this->contentRepositoryRegistry->get($node->contentRepositoryId);
+        $subGraph = $contentRepository->getContentSubgraph($node->workspaceName, $node->dimensionSpacePoint);
+        $absoluteNodePath = $subGraph->retrieveNodePath($node->aggregateId);
 
         return [
             'nodeTypeName' => $node->nodeTypeName->value,
             'node' => $type,
             'type' => '',
             'id' => '',
-            'path' => NodePath::fromNodeNames($node->name),
+            'path' => $absoluteNodePath->path->serializeToString(),
             'data' => isset($duration),
         ];
     }
