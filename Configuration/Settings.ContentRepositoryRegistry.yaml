@@ -2,7 +2,7 @@ Neos:
   ContentRepositoryRegistry:
     presets:
       default:
-        contentGraphProjection:
-            catchUpHooks:
-              'Jonnitto.PrettyEmbedHelper:AssetDownloadHook':
-                factoryObjectName: Jonnitto\PrettyEmbedHelper\CatchUpHook\AssetDownloadCatchUpHookFactory
+
+        commandHooks:
+          'Jonnitto.PrettyEmbedHelper:AssetDownloadCommandHook':
+            factoryObjectName: Jonnitto\PrettyEmbedHelper\CommandHook\AssetDownloadCommandHookFactory

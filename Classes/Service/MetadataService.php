@@ -134,11 +134,6 @@ class MetadataService
     {
         $platform = $this->checkNodeAndSetPlatform($node);
 
-        $this->logger->info(
-            __METHOD__ . 'platform: ' . $platform,
-            LogEnvironment::fromMethodName(__METHOD__)
-        );
-
         if (!$platform) {
             return $this->defaultReturn;
         }
@@ -228,7 +223,7 @@ class MetadataService
      * @param Node $node
      * @return \Neos\ContentRepository\Core\NodeType\NodeType[]
      */
-    protected function getSuperTypes(Node $node): array
+    public function getSuperTypes(Node $node): array
     {
         $contentRepository = $this->contentRepositoryRegistry->get($node->contentRepositoryId);
         $nodeTypeManager = $contentRepository->getNodeTypeManager();

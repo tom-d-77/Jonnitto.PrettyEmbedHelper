@@ -9,6 +9,7 @@ use Jonnitto\PrettyEmbedPresentation\Utility\Utility as PresentationUtility;
 use Neos\ContentRepository\Core\Feature\NodeModification\Command\SetNodeProperties;
 use Neos\ContentRepository\Core\Feature\NodeModification\Dto\PropertyValuesToWrite;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
+use Neos\ContentRepository\Core\Projection\ContentGraph\NodePath;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Http\Client\InfiniteRedirectionException;
@@ -58,14 +59,15 @@ class YoutubeService
     {
         $this->imageService->remove($node);
 
-        $contentRepository = $this->contentRepositoryRegistry->get($node->contentRepositoryId);
-        $subGraph = $contentRepository->getContentSubgraph($node->workspaceName, $node->dimensionSpacePoint);
-        $absoluteNodePath = $subGraph->retrieveNodePath($node->aggregateId);
+        // $contentRepository = $this->contentRepositoryRegistry->get($node->contentRepositoryId);
+        // $subGraph = $contentRepository->getContentSubgraph($node->workspaceName, $node->dimensionSpacePoint);
+        // $absoluteNodePath = $subGraph->retrieveNodePath($node->aggregateId);
 
         $returnArray = [
             'nodeTypeName' => $node->nodeTypeName->value,
             'node' => 'Youtube',
-            'path' => $absoluteNodePath->path->serializeToString(),
+            'path' => '', // NodePath::fromNodeNames($node->name) is not set! retrieveNodePath fails!
+            'aggregateId' => $node->aggregateId,
             'data' => false
         ];
 
