@@ -60,15 +60,30 @@ class AssetDownloadCommandHook implements CommandHookInterface
             in_array('Jonnitto.PrettyEmbedHelper:Mixin.Metadata', $superTypeStrings)
         )
         {
+            $this->logger->debug(
+                'Created Video ', LogEnvironment::fromMethodName(__METHOD__)
+            );
             $this->metadataService->onNodeAdded($node);
         }
 
+        // SetNodeProperties also triggered if node is created!
         if (
             $command instanceOf SetNodeProperties &&
             in_array('Jonnitto.PrettyEmbedHelper:Mixin.Metadata', $superTypeStrings)
         )
         {
-            // $this->metadataService->updateDataFromService($node);
+            foreach($events as $event) {
+                if (isset($event->propertyValues->values['videoID'])) {
+                    $this->logger->debug(
+                        'Update prettyembedMetadata ', LogEnvironment::fromMethodName(__METHOD__)
+                    );
+                    if ($this->metadataService->isNewVideoID($node, $event->propertyValues->values['videoID']->value)) {
+                        $this->metadataService->updateDataFromService(
+                            $node, 'videoID', '', $event->propertyValues->values['videoID']
+                        );
+                    }
+                }
+            }
         }
 
         return Commands::createEmpty();

@@ -101,13 +101,15 @@ class MetadataService
      */
     public function updateDataFromService(Node $node, string $propertyName, $oldValue, $newValue): array
     {
-        // @todo: due to the replacement of the event system with hooks, the parameters and conditions need to be adjusted
-        // @todo: check $node->nodeTypeName never equals to 'Jonnitto.PrettyEmbedHelper:Mixin.Metadata'
+        $superTypeNames = array_keys($this->getSuperTypes($node));
+
+        $platform = $this->checkNodeAndSetPlatform($node);
+
         if (
             ($propertyName === 'videoID' && $oldValue !== $newValue) ||
             ($propertyName === 'type' && $node->hasProperty('videoID')) ||
             ($propertyName === 'assets' &&
-                $node->nodeTypeName->equals(NodeTypeName::fromString('Jonnitto.PrettyEmbedHelper:Mixin.Metadata')))
+                in_array('Jonnitto.PrettyEmbedHelper:Mixin.Metadata', $superTypeNames))
         ) {
             return $this->dataFromService($node);
         }
@@ -209,5 +211,13 @@ class MetadataService
 
         $nodeType = $nodeTypeManager->getNodeType($node->nodeTypeName->value);
         return $nodeType->getDeclaredSuperTypes();
+    }
+
+    public function isNewVideoID(Node $node, string $videoID): bool
+    {
+        if (isset($node->getProperty('prettyembedMetadata')['href'])) {
+            return (!str_contains($node->getProperty('prettyembedMetadata')['href'], $videoID));
+        }
+        return true;
     }
 }

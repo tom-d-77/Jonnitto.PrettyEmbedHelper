@@ -59,10 +59,6 @@ class YoutubeService
     {
         $this->imageService->remove($node);
 
-        // $contentRepository = $this->contentRepositoryRegistry->get($node->contentRepositoryId);
-        // $subGraph = $contentRepository->getContentSubgraph($node->workspaceName, $node->dimensionSpacePoint);
-        // $absoluteNodePath = $subGraph->retrieveNodePath($node->aggregateId);
-
         $returnArray = [
             'nodeTypeName' => $node->nodeTypeName->value,
             'node' => 'Youtube',
