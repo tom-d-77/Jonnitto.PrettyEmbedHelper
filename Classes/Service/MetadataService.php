@@ -16,7 +16,6 @@ use Neos\Flow\Persistence\Exception\IllegalObjectTypeException;
 use Neos\Flow\Persistence\Exception\InvalidQueryException;
 use Neos\Flow\ResourceManagement\Exception;
 use JsonException;
-use Psr\Log\LoggerInterface;
 
 #[Flow\Scope('singleton')]
 class MetadataService
@@ -38,9 +37,6 @@ class MetadataService
 
     #[Flow\Inject]
     protected ContentRepositoryRegistry $contentRepositoryRegistry;
-
-    #[Flow\Inject]
-    protected LoggerInterface $logger;
 
     /**
      * @var array
@@ -71,17 +67,11 @@ class MetadataService
     {
         $superTypes = $this->getSuperTypes($node);
 
-        $this->logger->info(
-            __METHOD__ . 'subNodeTypes: ' . print_r($superTypes, true),
-            LogEnvironment::fromMethodName(__METHOD__)
-        );
-
         foreach ($superTypes as $superType) {
             if (
                 $node->hasProperty('videoID') ||
                 $superType->isOfType('Jonnitto.PrettyEmbedHelper:Mixin.Metadata')
             ) {
-                $this->logger->info('subNodeType: ' . $superType->name);
                 return $this->dataFromService($node, $remove);
             }
         }
@@ -111,6 +101,8 @@ class MetadataService
      */
     public function updateDataFromService(Node $node, string $propertyName, $oldValue, $newValue): array
     {
+        // @todo: due to the replacement of the event system with hooks, the parameters and conditions need to be adjusted
+        // @todo: check $node->nodeTypeName never equals to 'Jonnitto.PrettyEmbedHelper:Mixin.Metadata'
         if (
             ($propertyName === 'videoID' && $oldValue !== $newValue) ||
             ($propertyName === 'type' && $node->hasProperty('videoID')) ||
@@ -147,7 +139,6 @@ class MetadataService
         }
 
         if ($platform == 'youtube') {
-            $this->logger->info('getAndSaveDataFromApi ' . $platform);
             try {
                 $data = $this->youtubeService->getAndSaveDataFromApi($node, $remove);
             } catch (JsonException | InfiniteRedirectionException | IllegalObjectTypeException | InvalidQueryException | Exception $e) {
@@ -172,18 +163,11 @@ class MetadataService
     {
         $superTypeStrings = array_keys($this->getSuperTypes($node));
 
-        $this->logger->info(
-            'superTypes: ' . print_r($superTypeStrings, true),
-            LogEnvironment::fromMethodName(__METHOD__)
-        );
-
         if (in_array('Jonnitto.PrettyEmbedAudio:Mixin.Assets', $superTypeStrings)) {
-            $this->logger->info('audio');
             return 'audio';
         }
 
         if (in_array('Jonnitto.PrettyEmbedVideo:Mixin.Assets', $superTypeStrings)) {
-            $this->logger->info('video');
             return 'video';
         }
 
@@ -192,11 +176,6 @@ class MetadataService
         ) {
             return null;
         }
-
-        $this->logger->info(
-            'videoID: ' . $node->getProperty('videoID'),
-            LogEnvironment::fromMethodName(__METHOD__)
-        );
 
         $platform = $this->parseID->platform($node->getProperty('videoID'));
 

@@ -31,7 +31,6 @@ class AssetDownloadCommandHook implements CommandHookInterface
 
     public function onBeforeHandle(CommandInterface $command): CommandInterface
     {
-        // TODO: Implement onBeforeHandle() method.
         return $command;
     }
 
